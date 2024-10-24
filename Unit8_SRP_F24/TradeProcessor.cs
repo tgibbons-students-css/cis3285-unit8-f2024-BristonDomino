@@ -121,14 +121,14 @@ namespace SingleResponsibilityPrinciple
             //    The @ sign allows for back slashes
             //    Watch for double quotes which must be escaped using "" 
             //    Watch for extra spaces after C: and avoid paths with - hyphens -
-            string genericConnectString = @"Data Source=(local);Initial Catalog=TradeDatabase;Integrated Security=True;";
+            string genericConnectString = @"Data Source=(LocalDB)\MSSQLLocalDB;AttachDbFilename=C:\Users\BDDDo\source\repos\cis3285-unit8-f2024-BristonDomino\Unit8_SRP_F24\DataFiles\tradedatabase.mdf;Integrated Security=True;Connect Timeout=30;";
             // The datadirConnectString connection string uses |DataDirectory| 
             //    and assumes the tradedatabase.mdf file is stored in 
             //    SingleResponsibilityPrinciple\bin\Debug 
             string datadirConnectString = @"Data Source=(LocalDB)\MSSQLLocalDB;AttachDbFilename=|DataDirectory|\tradedatabase.mdf;Integrated Security=True;Connect Timeout=30;";
             // This users the Azure connection string
-            string azureConnectString = @"Data Source=cis3115-server.database.windows.net;Initial Catalog=CIS3115;User ID=cis3115;Password=Saints4SQL;Connect Timeout=60;Encrypt=True;TrustServerCertificate=False;ApplicationIntent=ReadWrite;MultiSubnetFailover=False";
-           
+            string azureConnectString = @"Data Source=cis3115-server.database.windows.net;Initial Catalog=CIS3115;User ID=cis3115;Password=Saints4SQL;Connect Timeout=60;Encrypt=True;TrustServerCertificate=False;ApplicationIntent=ReadWrite;MultiSubnetFailover=False";            
+
             // Change the connection string used to match the one you want
             using (var connection = new SqlConnection(genericConnectString))
             {
