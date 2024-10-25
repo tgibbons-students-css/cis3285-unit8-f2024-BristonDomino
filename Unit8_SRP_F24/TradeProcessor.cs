@@ -39,6 +39,7 @@ namespace SingleResponsibilityPrinciple
         /// <param name="fields"> The string must be split into three components before calling </param>
         /// <param name="currentLine"> This is the current line number in the file, used to report errors</param>
         /// <returns> true if all the checks pass </returns>
+        /// Made shome changes to use a list of valid currency codes to validate the input to allow the tests pass.
         private bool ValidateTradeData(String[] fields, int currentLine)
         {
             if (fields.Length != 3)
