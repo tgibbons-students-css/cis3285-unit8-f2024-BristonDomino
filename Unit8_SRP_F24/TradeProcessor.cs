@@ -1,4 +1,5 @@
 ﻿using Microsoft.Data.SqlClient;
+using Microsoft.SqlServer.Server;
 
 namespace SingleResponsibilityPrinciple
 {
@@ -12,7 +13,7 @@ namespace SingleResponsibilityPrinciple
         /// </summary>
         /// <param name="stream"> File must be passed in as a Stream. </param>
         /// <returns> Returns a list of strings, one for each string for each line in the file </returns>
-        private IEnumerable<string> ReadTradeData(Stream stream)
+        public IEnumerable<string> ReadTradeData(Stream stream)
         {
             // read rows
             List<string> lines = new List<string>();
@@ -27,6 +28,11 @@ namespace SingleResponsibilityPrinciple
             return lines;
         }
 
+        private static readonly HashSet<String> ValidCurrencies = new HashSet<String>
+        {
+            "USD", "EUR", "GBP", "JPY", "AUD", "CAD", "CHF"
+        };
+
         /// <summary>
         /// Checks the formate on a single line in the trade file.
         /// </summary>
@@ -37,29 +43,29 @@ namespace SingleResponsibilityPrinciple
         {
             if (fields.Length != 3)
             {
-                LogMessage("WARN: Line {0} malformed. Only {1} field(s) found.", currentLine, fields.Length);
+                LogMessage($"WARN: Line {currentLine} malformed. Only {fields.Length} field(s) found.");
                 return false;
             }
 
-            if (fields[0].Length != 6)
+            if (!ValidCurrencies.Contains(fields[0].Substring(0, 3)) ||
+                !ValidCurrencies.Contains(fields[0].Substring(3, 3)))
             {
-                LogMessage("WARN: Trade currencies on line {0} malformed: '{1}'", currentLine, fields[0]);
+                LogMessage($"WARN: Line {currentLine} malformed. Invalid currency code: {fields[0]}.");
                 return false;
             }
 
-            int tradeAmount;
-            if (!int.TryParse(fields[1], out tradeAmount))
+            if (!int.TryParse(fields[1], out int lots) || lots <= 0)
             {
-                LogMessage("WARN: Trade amount on line {0} not a valid integer: '{1}'", currentLine, fields[1]);
+                LogMessage($"WARN: Line {currentLine} malformed. Invalid lot size: {fields[1]}.");
                 return false;
             }
 
-            decimal tradePrice;
-            if (!decimal.TryParse(fields[2], out tradePrice))
+            if (!decimal.TryParse(fields[2], out decimal price) || price <= 0)
             {
-                LogMessage("WARN: Trade price on line {0} not a valid decimal: '{1}'", currentLine, fields[2]);
+                LogMessage($"WARN: Line {currentLine} malformed. Invalid trade price: {fields[2]}.");
                 return false;
             }
+
             return true;
         }
 

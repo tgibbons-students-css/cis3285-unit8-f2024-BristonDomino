@@ -8,12 +8,110 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace SingleResponsibilityPrinciple.Tests
 {
     [TestClass()]
     public class TradeProcessorTests
     {
+        [TestMethod()]
+        public void TestEmptyFile()
+        {
+            // Arrange
+            var emptyStream = new MemoryStream(); // Empty stream
+            var tradeProcessor = new TradeProcessor();
+
+            // Act
+            int countBefore = CountDbRecords();
+            tradeProcessor.ProcessTrades(emptyStream);
+
+            // Assert
+            int countAfter = CountDbRecords();
+            Assert.AreEqual(countBefore, countAfter); // No trades added
+        }
+
+        [TestMethod()]
+        public void TestTenTrades()
+        {
+            // Arrange
+            var tradeData = string.Join("\n", Enumerable.Repeat("GBPUSD,1000,1.51", 10));
+            var stream = new MemoryStream(Encoding.UTF8.GetBytes(tradeData));
+            var tradeProcessor = new TradeProcessor();
+
+            // Act
+            int countBefore = CountDbRecords();
+            tradeProcessor.ProcessTrades(stream);
+
+            // Assert
+            int countAfter = CountDbRecords();
+            Assert.AreEqual(countBefore + 10, countAfter); // 10 trades added
+        }
+
+        [TestMethod()]
+        public void TestBadTradeTooManyValues()
+        {
+            // Arrange
+            var badTrade = "GBPUSD,1000,1.51,ExtraValue";
+            var stream = new MemoryStream(Encoding.UTF8.GetBytes(badTrade));
+            var tradeProcessor = new TradeProcessor();
+
+            // Act
+            int countBefore = CountDbRecords();
+            tradeProcessor.ProcessTrades(stream);
+
+            // Assert
+            int countAfter = CountDbRecords();
+            Assert.AreEqual(countBefore, countAfter); // No trades added
+        }
+
+        [TestMethod()]
+        public void TestBadTradeNegativeLotSize()
+        {
+            // Arrange
+            var badTrade = "GBPUSD,-100,1.51";
+            var stream = new MemoryStream(Encoding.UTF8.GetBytes(badTrade));
+            var tradeProcessor = new TradeProcessor();
+
+            // Act
+            int countBefore = CountDbRecords();
+            tradeProcessor.ProcessTrades(stream);
+
+            // Assert
+            int countAfter = CountDbRecords();
+            Assert.AreEqual(countBefore, countAfter); // No trades added
+        }
+
+        [TestMethod()]
+        [ExpectedException(typeof(FileNotFoundException))]
+        public void TestFileNotFound()
+        {
+            // Act
+            using (var stream = File.OpenRead("nonexistentfile.txt"))
+            {
+                var tradeProcessor = new TradeProcessor();
+                tradeProcessor.ProcessTrades(stream);
+            }
+        }
+
+        [TestMethod()]
+        public void TestInvalidCurrencyCode()
+        {
+            // Arrange
+            var invalidCurrencyTrade = "XXXUSD,100,1.50"; 
+            var stream = new MemoryStream(Encoding.UTF8.GetBytes(invalidCurrencyTrade));
+            var tradeProcessor = new TradeProcessor();
+
+            // Act
+            int countBefore = CountDbRecords();
+            tradeProcessor.ProcessTrades(stream);
+
+            // Assert
+            int countAfter = CountDbRecords();
+            Assert.AreEqual(countBefore, countAfter); // Expect no trades added, but it may add 1
+        }
+
+
         private int CountDbRecords()
         {
             // Update this connection string with the one you use in your main project
@@ -32,6 +130,7 @@ namespace SingleResponsibilityPrinciple.Tests
                 return count;
             }
         }
+
 
         [TestMethod()]
         public void TestNormalFile()
